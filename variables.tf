@@ -23,7 +23,7 @@ variable "versao_python" {
 }
 variable "nome_lambda" {
   type = string
-  default = "lambda05"
+  default = "lambda_rds"
   description = "Nome da função lambda da funcionalidade X."
 }
 

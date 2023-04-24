@@ -122,14 +122,21 @@ resource "aws_iam_role" "iam_for_lambda" {
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
+
 resource "aws_iam_role_policy_attachment" "AWSLambdaVPCAccessExecutionRole" {
     role       = aws_iam_role.iam_for_lambda.id
     policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
+resource "aws_iam_role_policy_attachment" "AmazonS3FullAccess" {
+    role       = aws_iam_role.iam_for_lambda.id
+    policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+
 data "archive_file" "lambda" {
   type        = "zip"
-  source_file = "lambda_function.py" # Para pastas, usar: source_dir CRIAR VARIAVEL
+  source_dir = "lambda_function" # Para pastas, usar: source_dir CRIAR VARIAVEL
   # source_file = "${path.module}/lambda_function.py"
   output_path = "lambda_function_payload.zip"
 }
@@ -157,6 +164,7 @@ resource "aws_lambda_function" "test_lambda" {
       DATABASE_PASSWORD = aws_db_instance.rds-postgres.password
       DATABASE_NAME = aws_db_instance.rds-postgres.db_name
       DATABASE_PORT = aws_db_instance.rds-postgres.port
+      BUCKET_NAME = aws_s3_bucket.b.bucket
     }
   }
 
