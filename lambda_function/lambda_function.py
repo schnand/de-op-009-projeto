@@ -1,38 +1,50 @@
 
 import psycopg2
 import os
-import boto3
+#import boto3
 import pandas as pd
-from io import StringIO
+#from io import StringIO
 
 print("Import concluído");
 
 # Crie uma sessão do boto3 com as suas credenciais ou configure suas variáveis de ambiente.
-s3 = boto3.client('s3')
 
 def lambda_metodo(event, context):
+    
+   # s3 = boto3.client('s3')
 
     # Nome do bucket e do arquivo
     bucket_name = os.environ['BUCKET_NAME']
+    #bucket_name = 'de-op-009-bucket-grupo-4-lambda'
     file_name = 'train.csv'
 
     print(bucket_name)
     print(file_name)
 
-    print("Lendo o arquivo csv no s3");
+    #print("Lendo o arquivo csv no s3");
 
     # Lendo o arquivo CSV do S3
-    obj = s3.get_object(Bucket=bucket_name, Key=file_name)
-    data = obj['Body'].read().decode('utf-8')
+    #obj = s3.get_object(Bucket=bucket_name, Key=file_name)
+    #data = obj['Body'].read().decode('utf-8')
+    #data = pd.read_csv(obj['Body'])
 
-    print("transformando em um dataframe");
+    print("Criando um dataframe chamado df_titanic");
 
     # Transformando o arquivo em um dataframe
-    df_titanic = pd.read_csv(StringIO(data))
+    #df_titanic = pd.read_csv(StringIO(data))
 
-    df_titanic.head()
+    data = [    [0, 'male', 22, 1, 0, 7.25, 'Third', 'unknown', 'Southampton', 'n'],
+    [1, 'female', 38, 1, 0, 71.2833, 'First', 'C', 'Cherbourg', 'n'],
+    [1, 'female', 26, 0, 0, 7.925, 'Third', 'unknown', 'Southampton', 'y']
+    ]
 
-    len(df_titanic)
+    columns = ['survived', 'sex', 'age', 'n_siblings_spouses', 'parch', 'fare', 'class', 'deck', 'embark_town', 'alone']
+
+    df_titanic = pd.DataFrame(data, columns=columns)
+
+    print(df_titanic.head())
+
+    print(len(df_titanic))
 
     print("Realizando a conexão com o banco de dados");
 
@@ -49,6 +61,11 @@ def lambda_metodo(event, context):
 
     # Criando uma tabela chamada titanic no database postgres
     cur = conn.cursor()
+
+    # Drop table if exists
+    cur.execute('DROP TABLE IF EXISTS titanic')
+
+    # Criando a tabela
     cur.execute('''
         CREATE TABLE titanic (
             survived INTEGER,
@@ -64,6 +81,7 @@ def lambda_metodo(event, context):
             
         )
     ''')
+    conn.commit()
 
     print("Gravando o conteúdo do dataframe df_titanic na tabela titanic");
 
@@ -79,6 +97,8 @@ def lambda_metodo(event, context):
             row['survived'], row['sex'], row['age'], row['n_siblings_spouses'], row['parch'],
             row['fare'], row['class'], row['deck'], row['embark_town'], row['alone']
         ))
+        
+        print(row)
 
 
     df_select_titanic = pd.read_sql_query('SELECT * FROM titanic', conn)
@@ -92,3 +112,7 @@ def lambda_metodo(event, context):
     conn.commit()
     cur.close()
     conn.close()
+    #s3 = None
+
+
+#lambda_metodo(None,None)
